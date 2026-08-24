@@ -1,0 +1,15 @@
+{
+  "name": "finance-skills",
+  "owner": {
+    "name": "from68"
+  },
+  "plugins": [
+    {
+      "name": "finance-skills",
+      "source": "./",
+      "description": "Stock analysis and portfolio management skills for retail investors, powered by the FMP and Interactive Brokers MCP connectors",
+      "version": "2.0.0",
+      "category": "productivity"
+    }
+  ]
+}

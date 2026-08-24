@@ -1,0 +1,13 @@
+# Local Claude Code settings — machine-specific, never committed
+.claude/settings.local.json
+.claude/*.local.json
+
+# Skill output directories
+Shortlist/
+Stock Screener/
+
+# Portfolio data — never commit personal financial files
+*.xml
+!**/references/*.xml
+
+.DS_Store
