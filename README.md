@@ -30,8 +30,13 @@ cash balances, allocation breakdowns, performance series, watchlists, and themat
 company search.
 
 Without it, portfolio analysis falls back to a Portfolio Performance XML file read through
-the [`pp` CLI](https://github.com/portfolio-performance/portfolio) — see the `pp-usage`
-skill — or to holdings you paste in manually.
+the [`pp` CLI](https://github.com/from68/pp-cli) — see the `pp-usage` skill — or to holdings
+you paste in manually. `portfolio-management` installs/updates `pp` itself at the start of
+every run that uses this path, so the only requirement is a Go toolchain on `PATH`:
+
+```bash
+go install github.com/from68/pp-cli/cmd/pp@latest
+```
 
 **No `.mcp.json` ships with this plugin.** Connectors are configured per user in Claude,
 so the repository deliberately contains no server definitions, URLs, or API keys.
@@ -58,7 +63,7 @@ Or, from a local clone:
 
 | Skill | Purpose |
 | --- | --- |
-| `quick-stock-analysis` | 5-gate mechanical screen (revenue growth, P/E, PEG, ROE, quick ratio) → go/no-go verdict, written to `./Stock Screener/<TICKER>.md` |
+| `quick-stock-analysis` | 5-gate mechanical screen (revenue growth, P/E, PEG, ROE, quick ratio) → score out of 5 plus verdict, written to `./Stock Screener/<TICKER>.md` |
 | `full-stock-analysis` | Fundamentals, valuation, technicals, peer comparison and a full investment report, written to `./Shortlist/<TICKER>.md` |
 | `portfolio-management` | Allocation, diversification, risk, position-by-position evaluation and a rebalancing plan |
 | `market-data` | Reference for the FMP and IBKR connectors — endpoints, parameters, field mappings, fallbacks |
@@ -82,8 +87,10 @@ Or, from a local clone:
 "Is Microsoft overvalued?"
 ```
 
-`quick-stock-analysis` triages, `full-stock-analysis` goes deep. A quick screen that
-returns INVEST is a prompt for further research, not a buy signal.
+`quick-stock-analysis` triages, `full-stock-analysis` goes deep. All five gates are always
+evaluated, so the screen reports a score (`4/5`, `2/5`, …) rather than stopping at the first
+miss — a stock that fails one gate can still be worth a look. A 5/5 INVEST is a prompt for
+further research, not a buy signal.
 
 ### Finding ideas
 

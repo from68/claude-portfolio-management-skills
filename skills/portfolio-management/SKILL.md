@@ -52,7 +52,20 @@ you whether returns are time-weighted or money-weighted.
 ### Source B (fallback): Portfolio Performance XML via the `pp` CLI
 
 Use when IBKR is not connected, or when the user explicitly points at a `.xml` file.
-Requires the `pp` CLI installed and on `PATH`.
+
+**Install `pp` at the start of every run that uses this path.** Never assume the binary is
+present or current:
+
+```bash
+go install github.com/from68/pp-cli/cmd/pp@latest
+```
+
+The command is idempotent and fast once cached, though the first run may pull a matching Go
+toolchain. It installs into `$(go env GOPATH)/bin` (usually `~/go/bin`); if `pp` is still not
+on `PATH` afterwards, call it by that full path. Run `pp --version` to confirm the binary is
+reachable — it prints `pp version dev`, since the build is not version-stamped, so treat it
+as a smoke test, not a version check. `pp` needs the Go toolchain — if `go` is missing, say
+so and ask the user to install it rather than installing a toolchain yourself.
 
 **Key `pp` commands used:**
 
@@ -138,6 +151,16 @@ get_account_orders()                # working orders that will change the pictur
 #### Source B — Portfolio Performance XML via `pp`
 
 Invoke the `pp-usage` skill for exact command syntax if needed.
+
+**1.0 Install/update the `pp` CLI — mandatory, every run:**
+
+```bash
+go install github.com/from68/pp-cli/cmd/pp@latest && pp --version
+```
+
+Run this before any other `pp` command, every single run. Do not skip it because `pp` worked
+in a previous session — the commands and JSON fields below track the current CLI. `pp --version`
+prints `pp version dev` even on a fresh install; it only confirms the binary is on `PATH`.
 
 **1.1 List Portfolios:**
 
@@ -897,11 +920,14 @@ Load these references as needed during analysis:
 1. Ask the user for the path to their `.xml` file
 2. Optionally run `find ~ -name "*.xml" -path "*portfolio*" 2>/dev/null` to help locate it
 
-**If `pp` CLI is not installed:**
+**If `pp` is missing or `go install` fails:**
 
-1. Inform the user that the `pp` CLI is required for the Source B path
-2. Invoke the `pp-usage` skill for command reference
-3. Suggest the IBKR connector as the alternative
+1. Re-run `go install github.com/from68/pp-cli/cmd/pp@latest` and read the actual error
+2. If `go` is not on `PATH`, tell the user `pp` needs the Go toolchain and ask them to
+   install it — do not install a toolchain yourself
+3. If the install succeeded but `pp` is not found, invoke it as `$(go env GOPATH)/bin/pp`
+4. If `pp` still cannot be made to work, suggest the IBKR connector or the
+   paste-your-holdings fallback; invoke the `pp-usage` skill for command reference
 
 **If a command returns incomplete or unexpected data:**
 

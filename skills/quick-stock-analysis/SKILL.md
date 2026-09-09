@@ -1,13 +1,13 @@
 ---
 name: quick-stock-analysis
-description: Perform a fast 30-second stock screen using a 5-step decision tree (revenue growth, P/E, PEG, ROE, quick ratio) against the FMP connector and write the result to a markdown file. Use when the user asks for a "quick analysis", "quick stock check", "30-second analysis", or wants a fast go/no-go verdict on a stock before doing deeper work.
+description: Perform a fast 30-second stock screen using a 5-step decision tree (revenue growth, P/E, PEG, ROE, quick ratio) against the FMP connector, score it out of 5, and write the result to a markdown file. All five gates are always evaluated, so a stock that misses one still gets a score and a breakdown. Use when the user asks for a "quick analysis", "quick stock check", "30-second analysis", or wants a fast go/no-go verdict on a stock before doing deeper work.
 metadata:
   version: 2.0.0
 ---
 
 # Quick Stock Analysis
 
-A fast, opinionated screen that answers one question: **should I bother doing deeper fundamental analysis on this stock?** It runs through a 5-gate decision tree. If any gate fails, the stock is rejected with a specific reason. Only stocks that pass all 5 gates earn an "Invest" verdict.
+A fast, opinionated screen that answers one question: **should I bother doing deeper fundamental analysis on this stock?** It runs through 5 gates. **All five gates are always evaluated** — a failing gate never ends the screen — and the outcome is reported as a score out of five (e.g. `4/5`) alongside the per-gate breakdown, because a stock that misses one gate can still be interesting. Only a 5/5 earns an "Invest" verdict.
 
 **The stock symbol MUST be provided by the user. If not, ask for it.**
 
@@ -58,50 +58,64 @@ percentage threshold, and display them as percentages.
 
 ## Decision Tree
 
-Walk through the gates in order. **Stop at the first failure** — do not evaluate later gates once one fails, but still record all gathered data in the result file.
+Evaluate **all five gates on every run**, in order. Never short-circuit on a failure: a
+stock that fails gate 1 but clears the other four is a very different proposition from one
+that fails everything, and only a complete scorecard shows the difference.
 
 ### Gate 1 — Revenue Growth
 
 - **Question:** Has revenue grown by at least 10% every year for the last 3–5 years?
 - **Metric:** YoY revenue growth rate (annual)
 - **Pass:** Every year ≥ 10%
-- **Fail verdict:** `STOP — Low revenue growth`
+- **Fail reason:** `Low revenue growth`
 
 ### Gate 2 — P/E Ratio
 
 - **Question:** Is the trailing P/E ratio below 25?
 - **Metric:** Trailing twelve-month P/E
 - **Pass:** P/E < 25 (and positive — negative P/E fails this gate)
-- **Fail verdict:** `Likely overvalued`
+- **Fail reason:** `Likely overvalued`
 
 ### Gate 3 — PEG Ratio
 
 - **Question:** Is the PEG ratio below 2?
 - **Metric:** PEG = P/E ÷ EPS growth rate (%)
 - **Pass:** 0 < PEG < 2
-- **Fail verdict:** `Low profit growth`
+- **Fail reason:** `Low profit growth`
 
 ### Gate 4 — Return on Equity
 
 - **Question:** Has the company's ROE been over 5% on average for the last 5 years?
 - **Metric:** 5-year average ROE
 - **Pass:** Average ROE > 5%
-- **Fail verdict:** `Weak profitability`
+- **Fail reason:** `Weak profitability`
 
 ### Gate 5 — Quick Ratio
 
 - **Question:** Is the quick ratio above 1.5?
 - **Metric:** Quick Ratio = (Current Assets − Inventory) ÷ Current Liabilities
 - **Pass:** Quick Ratio > 1.5
-- **Fail verdict:** `Liquidity issues`
+- **Fail reason:** `Liquidity issues`
 
-### Final Verdict
+### Score and Final Verdict
 
-If all 5 gates pass → **INVEST (worth deeper analysis)**
+Count the gates that PASS — `UNKNOWN` never counts as a pass — and report the total as
+`<passed>/5`.
+
+| Score | Verdict | Meaning |
+| --- | --- | --- |
+| 5/5 | **INVEST** | Worth deeper analysis. Run `full-stock-analysis` next. |
+| 4/5 | **WATCH** | Misses one gate but may still be interesting. Name the failing gate and what would have to change. |
+| 3/5 | **WATCH (weak)** | Two misses. Worth deeper work only if both are explainable — e.g. a high P/E on a genuine compounder. |
+| 0–2/5 | **REJECT** | Too many misses to justify deeper work. |
+
+If any gate is UNKNOWN, append `INCONCLUSIVE` to the verdict and say which gates could not
+be evaluated. A 4/5 with one UNKNOWN is not the same as a 4/5 with one FAIL — never
+present them as equivalent.
 
 ## Output
 
-Write the result to `./Stock Screener/<TICKER>.md` in the current working directory. Use the template below. Fill every field — use `N/A` or `UNKNOWN` when data is genuinely missing.
+Write the result to `./Stock Screener/<TICKER>.md` in the current working directory. Use the template below. Fill every field — use `N/A` or `UNKNOWN` when data is genuinely missing. `invest` is `true` only at 5/5; `score`, `positive-gates` and `verdict` always carry the full picture, so a `4/5` stays discoverable even though `invest` is `false`.
 
 _If the Stock is pre-existing, update the Note!_.
 
@@ -114,10 +128,14 @@ date: <YYYY-MM-DD>
 current-price: <price>
 industry: <industry>
 invest: <true/false>
-positive-gates: <number of successfull gates>
+score: <passed>/5
+positive-gates: <number of gates passed, 0-5>
+verdict: <INVEST | WATCH | WATCH (weak) | REJECT>
 ---
 
 # Quick Stock Analysis: <TICKER> (<Company Name>)
+
+**Score: <passed>/5 — <VERDICT>**
 
 <Quick description of the Stock / Equity>
 
@@ -130,6 +148,8 @@ positive-gates: <number of successfull gates>
 | 3   | PEG Ratio      | < 2          | <value> | PASS/FAIL/UNKNOWN |
 | 4   | ROE (5y avg)   | > 5%         | <value> | PASS/FAIL/UNKNOWN |
 | 5   | Quick Ratio    | > 1.5        | <value> | PASS/FAIL/UNKNOWN |
+
+**Score: <passed>/5** — failing gates: <list, or "none">.
 
 ## Supporting Data
 
@@ -160,14 +180,16 @@ positive-gates: <number of successfull gates>
 
 ## Interpretation
 
-<2-4 sentences explaining the result. If REJECT, explain which gate killed it and
-what would need to change. If INVEST, call out the strongest metric and recommend
-running the `full-stock-analysis` skill next.>
+<2-4 sentences explaining the score. Name every failing gate and what would need to change
+for each, and call out the strongest metric. For 5/5 or 4/5, recommend running the
+`full-stock-analysis` skill next. For 3/5, say whether the two misses look explainable.
+For 0-2/5, say what to watch for a future revisit.>
 
 ## Next Step
 
-- If INVEST → run `full-stock-analysis` on <TICKER> for DCF and peer comparison.
-- If REJECT → skip deeper analysis; revisit if <the failing metric> improves.
+- 5/5 or 4/5 → run `full-stock-analysis` on <TICKER> for DCF and peer comparison.
+- 3/5 → optional deeper look; decide on the merits of <the failing gates>.
+- 0-2/5 → skip deeper analysis; revisit if <the failing metrics> improve.
 
 ---
 
@@ -179,16 +201,18 @@ _Quick screen only — not a buy/sell recommendation. Not financial advice._
 
 1. Confirm the ticker with the user if not provided.
 2. **Fetch the data** — make the four required FMP calls above. This step is mandatory and must complete before any gate is evaluated.
-3. Derive each gate value using the derivation table, then evaluate the gates in order, stopping at the first FAIL.
-4. Determine verdict: INVEST only if all 5 gates PASS. Any FAIL → REJECT. Any UNKNOWN on an otherwise-passing path → REJECT with `INCONCLUSIVE` note.
+3. Derive **every** gate value using the derivation table and evaluate all five gates. Do not stop early on a FAIL.
+4. Count the passes and map the score to a verdict per the score table. Add `INCONCLUSIVE` if any gate is UNKNOWN.
 5. Write the markdown file using the template above.
-6. Print the verdict and file path in the chat response.
+6. Print the score (`<passed>/5`), the verdict, the failing gates, and the file path in the chat response.
 
 ## Anti-Patterns
 
 - **Don't skip gates** because "the company is famous." The whole point is a mechanical screen.
+- **Don't short-circuit the decision tree.** All five gates get calculated on every run, even when gate 1 fails outright — the one-gate miss is often the interesting case.
 - **Don't fudge missing data.** If revenue growth for one year is missing, mark UNKNOWN — do not interpolate.
 - **Don't substitute a web search for a failed FMP call.** A scraped number is not comparable to the rest of the table. Mark it UNKNOWN.
 - **Don't mix period-end and live figures silently.** The quote P/E is live; `metrics-ratios` P/E is as of the fiscal year end. Say which you used.
 - **Don't treat INVEST as a buy signal.** It's a "worth deeper research" flag, nothing more.
+- **Don't collapse the score into a bare pass/fail.** `4/5` and `1/5` are both "not INVEST" and are not remotely the same thing; always show the score and which gates failed.
 - **Don't apply this to banks, insurers, REITs, or pre-profit growth stocks.** Quick ratio and P/E are misleading for financials; ROE and P/E are misleading for unprofitable growth. If the user requests one of these, note the limitation and suggest `full-stock-analysis` directly instead.

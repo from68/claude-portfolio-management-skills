@@ -32,13 +32,15 @@ built on guesswork.
 
 ## Which skill to use
 
-- **`quick-stock-analysis`** — a 5-gate mechanical screen. Use for "is this worth a closer
-  look?", for triaging a list of candidates, or as the first pass before deeper work.
+- **`quick-stock-analysis`** — a 5-gate mechanical screen scored out of 5. Use for "is this
+  worth a closer look?", for triaging a list of candidates, or as the first pass before
+  deeper work.
 - **`full-stock-analysis`** — fundamentals, valuation, technicals, peer comparison and a
   full report. Use when the user wants a real analysis, a recommendation, or a comparison.
 
-When a quick screen returns INVEST and the user wants more, follow up with the full
-analysis rather than stopping at the gate result.
+When a quick screen scores 4/5 or 5/5 and the user wants more, follow up with the full
+analysis rather than stopping at the gate result. Report the score, not just pass/fail — a
+4/5 with one explainable miss is worth surfacing.
 
 ## Working rules
 

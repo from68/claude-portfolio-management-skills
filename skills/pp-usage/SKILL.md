@@ -15,6 +15,22 @@ When the user asks how to do something, show them the exact command. Be concise 
 
 ---
 
+## Installation
+
+`pp` is a Go program. Install or update it with:
+
+```bash
+go install github.com/from68/pp-cli/cmd/pp@latest
+```
+
+It lands in `$(go env GOPATH)/bin` (usually `~/go/bin`) — invoke it by that full path if the
+directory is not on `PATH`. The command is idempotent, so re-running it at the start of a
+session is cheap; `portfolio-management` does exactly that on every run. `pp --version` prints
+`pp version dev` regardless of the release installed, so use it only to confirm the binary
+runs. If `go` itself is missing, the Go toolchain has to be installed first.
+
+---
+
 ## Global Flags
 
 All commands require `--file` / `-f`. Output format is controlled by `--output` / `-o`.
