@@ -38,6 +38,13 @@ every run that uses this path, so the only requirement is a Go toolchain on `PAT
 go install github.com/from68/pp-cli/cmd/pp@latest
 ```
 
+### Optional: last30days
+
+If the [last30days](https://github.com/mvanhorn/last30days-skill) skill (or an MCP server
+exposing it) is installed, the `stock-explorer` agent uses it to find stocks that are being
+discussed on Reddit, X, YouTube and elsewhere. Candidates it surfaces are always confirmed
+through FMP; it is never a source of numbers. Without it, the agent skips that step.
+
 **No `.mcp.json` ships with this plugin.** Connectors are configured per user in Claude,
 so the repository deliberately contains no server definitions, URLs, or API keys.
 
@@ -73,7 +80,7 @@ Or, from a local clone:
 
 | Agent | Purpose |
 | --- | --- |
-| `stock-explorer` | Surfaces candidate companies from market movers, earnings surprises, news, screeners and IBKR themes |
+| `stock-explorer` | Surfaces candidate companies from market movers, earnings surprises, news, screeners, IBKR themes and — when installed — community discussion via last30days |
 | `stock-analyzer` | Analyses a named ticker in depth using the screening and analysis skills |
 
 ## Usage

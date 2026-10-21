@@ -1,6 +1,6 @@
 {
   "name": "finance-skills",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Stock analysis and portfolio management skills for retail investors, powered by the FMP and Interactive Brokers MCP connectors",
   "keywords": ["finance", "stocks", "investing", "portfolio", "fmp", "interactive-brokers"]
 }

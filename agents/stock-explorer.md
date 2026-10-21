@@ -89,6 +89,51 @@ get_company_connections(...)                          # products, competitors, e
 **Persisting a shortlist** — `create_watchlist` / `edit_watchlist` can save candidates back
 to the user's IBKR account. Only do this when they ask for it.
 
+## Discovery via last30days (optional)
+
+[last30days](https://github.com/mvanhorn/last30days-skill) researches what people are
+actually saying about a topic over the past 30 days — Reddit, X, YouTube, Hacker News,
+Polymarket and the web, ranked by engagement. It is the best route to stocks that are
+*being discussed* before the discussion shows up in the numbers. It is not part of this
+plugin, so check for it at the start of every run:
+
+1. **Skill** — look in your available-skills list for a skill named `last30days`, under any
+   plugin namespace (e.g. `last30days:last30days`).
+2. **MCP server** — if no skill is listed, run `ToolSearch(query="last30days")` and look for
+   tools whose names contain `last30days`.
+
+If neither exists, skip this section without comment beyond one line in the output
+("last30days not available — social discussion not checked") and carry on with the
+connectors. Never try to install it, and never imitate it with WebSearch.
+
+If it is available, run it **once or twice per exploration**, not per ticker — each run takes
+minutes. Pick topics that surface candidates rather than confirm them:
+
+- The user's theme, phrased as investors would discuss it: `"nuclear energy stocks"`,
+  `"AI chip stocks"`.
+- With no theme: `"stocks investors are talking about"` or `"undervalued stocks"`.
+- After the connector calls, one run on the strongest candidate to check whether the
+  enthusiasm is real: `"<company> stock"`.
+
+Invoke the skill with `Skill(skill="<name as listed>", args="<topic>")` and follow its
+instructions for that run. Its output format (badge, `What I learned:`, footer) governs
+only its own report — treat that report as raw input, and build *your* output to the format
+below.
+
+What to take from it:
+
+- **Tickers and company names** that come up repeatedly with real engagement — add them
+  to the candidate pool.
+- **The narrative** — why people are excited or worried, which catalyst they point at.
+- **Crowding** — a name everyone is already shouting about is a weaker candidate than one
+  gaining attention, so say which it is.
+
+What never comes from it: prices, multiples, growth rates, earnings figures or any other
+number that belongs in a metrics table. Every candidate surfaced by last30days must be
+confirmed through FMP (`search`, `quote`, `company`) before it reaches the shortlist — that
+it exists, trades, and is the company the discussion meant. Cite it as
+`last30days: <topic>` in the source column.
+
 ## Supplementing with WebSearch
 
 WebSearch is for narrative context the connectors do not carry — why a product
@@ -103,12 +148,13 @@ numbers, and anything drawn from it must be cited as a web source.
 - Insider or institutional accumulation
 - Improving fundamentals that the price has not yet reflected
 - Membership in a theme with real momentum, where the specific company is not yet crowded
+- Growing community discussion (last30days) that the connector data backs up
 
 ## Output
 
 Return a ranked shortlist. For each candidate give: **ticker, company name, one-line
-description, the specific reason it surfaced, and the source** (which connector call or
-cited web page). Keep it to a handful of strong candidates rather than a long thin list.
+description, the specific reason it surfaced, and the source** (which connector call,
+`last30days: <topic>`, or cited web page). Keep it to a handful of strong candidates rather than a long thin list.
 
 Then recommend running `quick-stock-analysis` on the shortlist to triage it.
 
